@@ -2,25 +2,90 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; media-src data:; script-src 'unsafe-inline'">
     
-    <title>Basic Sound Test (Serge E.)</title>
+    <title>Basic Sound Test (SergeE.)</title>
     <style>
-        :root { --gold: #ffca28; --green: #4caf50; --brown: #5d4037; --bg: #0d0d0d; }
-        body { margin: 0; background: var(--bg); color: #e0c097; font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        :root { 
+            --gold: #ffca28; 
+            --green: #4caf50; 
+            --brown: #5d4037; 
+            --red: #b71c1c;
+            --bg: #0d0d0d; 
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body { margin: 0; background: var(--bg); color: #e0c097; font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
+        
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.5; pointer-events: none; }
         
-        .ui-card { z-index: 10; text-align: center; background: rgba(10, 10, 10, 0.96); padding: 30px; border: 1px solid var(--brown); border-radius: 24px; width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.9); }
-        h1 { margin: 0 0 5px 0; font-size: 1.2rem; color: var(--gold); letter-spacing: 3px; transition: color 0.3s; }
+        /* FLUID UI CARD */
+        .ui-card { 
+            z-index: 10; 
+            text-align: center; 
+            background: rgba(10, 10, 10, 0.96); 
+            padding: clamp(20px, 5vw, 35px); /* Scales padding dynamically */
+            border: 1px solid var(--brown); 
+            border-radius: 24px; 
+            width: 90%; /* Adapts to small screens */
+            max-width: 400px; /* Caps the width on large screens */
+            box-shadow: 0 20px 60px rgba(0,0,0,0.9); 
+        }
         
-        .btn { background: var(--brown); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; transition: 0.2s; }
+        h1 { 
+            margin: 0 0 10px 0; 
+            font-size: clamp(1.1rem, 4vw, 1.4rem); /* Fluid typography */
+            color: var(--gold); 
+            letter-spacing: 3px; 
+            transition: color 0.3s; 
+        }
+        
+        .btn { 
+            background: var(--brown); 
+            color: white; 
+            border: none; 
+            padding: clamp(10px, 3vw, 14px); 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: clamp(0.75rem, 2vw, 0.9rem);
+            width: 100%; 
+            transition: 0.2s; 
+        }
+        .btn:hover:not(:disabled) { background: #795548; }
         .btn.active { background: var(--gold); color: #000; box-shadow: 0 0 15px var(--gold); }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; filter: grayscale(100%); }
         
-        .label-text { font-size: 0.7rem; color: #a1887f; text-transform: uppercase; display: block; margin-top: 15px; text-align: left; }
+        #stopBtn { background: var(--red); }
+        #stopBtn:hover:not(:disabled) { background: #d32f2f; box-shadow: 0 0 10px rgba(211, 47, 47, 0.5); }
+        
+        .label-text { 
+            font-size: clamp(0.65rem, 2vw, 0.75rem); 
+            color: #a1887f; 
+            text-transform: uppercase; 
+            display: block; 
+            margin-top: 15px; 
+            margin-bottom: 5px; 
+            text-align: left; 
+        }
+        
         input[type="range"] { width: 100%; accent-color: var(--gold); cursor: pointer; transition: accent-color 0.3s; }
         
-        .controls-footer { margin-top: 25px; border-top: 1px solid #222; padding-top: 15px; display: flex; flex-direction: column; gap: 10px; font-size: 0.8rem; }
+        .controls-footer { 
+            margin-top: 25px; 
+            border-top: 1px solid #222; 
+            padding-top: 15px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+            font-size: clamp(0.75rem, 2vw, 0.85rem); 
+        }
+        
+        .controls-footer label { cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        
+        #status { color: #444; font-size: 0.65rem; display: block; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -29,42 +94,51 @@
 
     <div class="ui-card">
         <h1 id="mainTitle">Basic Sound Test</h1>
-        <button id="playBtn" class="btn">START</button>
         
-        <span class="label-text">Volume: <span id="volLabel">20%</span></span>
-        <input type="range" id="volControl" min="0" max="1" step="0.01" value="0.2">
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button id="playBtn" class="btn" style="flex: 1;">START</button>
+            <button id="stopBtn" class="btn" style="flex: 1;" disabled>STOP</button>
+        </div>
+        
+        <span class="label-text">Volume: <span id="volLabel">15%</span></span>
+        <input type="range" id="volControl" min="0" max="1" step="0.01" value="0.15">
 
         <span class="label-text">Stereo Latch</span>
         <div style="display:flex; gap:10px;">
-            <button id="leftBtn" class="btn" style="margin:0;">LEFT</button>
-            <button id="rightBtn" class="btn" style="margin:0;">RIGHT</button>
+            <button id="leftBtn" class="btn" style="flex: 1; margin:0;">LEFT</button>
+            <button id="rightBtn" class="btn" style="flex: 1; margin:0;">RIGHT</button>
         </div>
 
         <div class="controls-footer">
-            <label style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <label>
                 <input type="checkbox" id="visToggle"> Visualizer (Default Off)
             </label>
-            <label style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <label>
                 <input type="checkbox" id="forestMode"> Forest Mode (Green)
             </label>
-            <small id="status" style="color:#444; font-size: 0.6rem;">READY & SECURE</small>
+            <small id="status">READY & SECURE</small>
         </div>
     </div>
 
     <script>
-        const playBtn = document.getElementById('playBtn'), volControl = document.getElementById('volControl'),
-              volLabel = document.getElementById('volLabel'), visToggle = document.getElementById('visToggle'),
-              forestToggle = document.getElementById('forestMode'), leftBtn = document.getElementById('leftBtn'),
-              rightBtn = document.getElementById('rightBtn'), canvas = document.getElementById('visualizer'),
-              ctx = canvas.getContext('2d'), statusEl = document.getElementById('status'),
-              mainTitle = document.getElementById('mainTitle');
+        const playBtn = document.getElementById('playBtn'), stopBtn = document.getElementById('stopBtn'),
+              volControl = document.getElementById('volControl'), volLabel = document.getElementById('volLabel'), 
+              visToggle = document.getElementById('visToggle'), forestToggle = document.getElementById('forestMode'), 
+              leftBtn = document.getElementById('leftBtn'), rightBtn = document.getElementById('rightBtn'), 
+              canvas = document.getElementById('visualizer'), ctx = canvas.getContext('2d'), 
+              statusEl = document.getElementById('status'), mainTitle = document.getElementById('mainTitle');
 
         let audio, audioCtx, analyser, source, panner, gainNode, dataArray, currentPan = 0, animationId = null;
 
-        // PERFORMANCE FIX: Kept the highly optimized canvas resize logic
+        // Auto-resizes the background visualizer perfectly to any window dimension
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            
+            // Re-draw a single frame if paused so the screen doesn't go blank on resize
+            if (audio && audio.paused && visToggle.checked) {
+                drawStaticFrame();
+            }
         }
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
@@ -76,7 +150,7 @@
 
                 audio = new Audio(cleanData);
                 audio.loop = true;
-                audio.volume = 0; // Set to 0 for smooth fade-in
+                audio.volume = 0;
 
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 analyser = audioCtx.createAnalyser();
@@ -89,7 +163,6 @@
                 analyser.fftSize = 128;
                 dataArray = new Uint8Array(analyser.frequencyBinCount);
                 
-                statusEl.innerText = "ENGINE READY";
                 return true;
             } catch (err) { 
                 statusEl.innerText = "LOAD ERROR"; 
@@ -99,23 +172,58 @@
         }
 
         async function togglePlay() {
-            if (!audio) { if(!startEngine()) return; }
+            if (!audio) { 
+                playBtn.innerText = "DECODING..."; 
+                playBtn.style.background = "#555";
+                
+                if(!startEngine()) return; 
+                
+                await new Promise(resolve => {
+                    if (audio.readyState >= 3) {
+                        resolve();
+                    } else {
+                        audio.addEventListener('canplay', resolve, { once: true });
+                    }
+                });
+                
+                playBtn.style.background = ""; 
+                statusEl.innerText = "ENGINE READY";
+            }
+            
             if (audioCtx.state === 'suspended') await audioCtx.resume();
 
             if (audio.paused) {
-                audio.play();
+                await audio.play();
                 const targetVol = parseFloat(volControl.value);
                 gainNode.gain.setTargetAtTime(1, audioCtx.currentTime, 0.5); 
                 audio.volume = targetVol; 
+                
                 playBtn.innerText = "PAUSE";
+                stopBtn.disabled = false; 
+                handleVisLoop(); 
             } else {
                 gainNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
                 setTimeout(() => {
-                    if (gainNode.gain.value < 0.01) audio.pause();
+                    audio.pause();
+                    handleVisLoop(); 
                 }, 200);
                 playBtn.innerText = "PLAY";
             }
         }
+
+        stopBtn.addEventListener('click', () => {
+            if (!audio || stopBtn.disabled) return; 
+            
+            stopBtn.disabled = true; 
+            
+            gainNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
+            setTimeout(() => {
+                audio.pause();
+                audio.currentTime = 0; 
+                playBtn.innerText = "START"; 
+                handleVisLoop(); 
+            }, 200);
+        });
 
         playBtn.addEventListener('click', togglePlay);
 
@@ -137,13 +245,15 @@
         rightBtn.addEventListener('click', () => togglePan(1));
 
         function handleVisLoop() {
-            if (visToggle.checked && !animationId && audio) {
+            const shouldDraw = visToggle.checked && audio && !audio.paused;
+
+            if (shouldDraw && !animationId) {
                 statusEl.innerText = "VISUALIZER RUNNING";
                 draw();
-            } else {
+            } else if (!shouldDraw && animationId) {
                 cancelAnimationFrame(animationId);
                 animationId = null;
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.clearRect(0, 0, canvas.width, canvas.height); 
                 statusEl.innerText = "RESOURCES IDLE";
             }
         }
@@ -155,6 +265,19 @@
             mainTitle.style.color = isForest ? "var(--green)" : "var(--gold)";
             volControl.style.accentColor = isForest ? "var(--green)" : "var(--gold)";
         });
+
+        // Helper function so the visualizer doesn't vanish if you resize the window while paused
+        function drawStaticFrame() {
+            if(!dataArray) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const barWidth = canvas.width / dataArray.length;
+            const color = forestToggle.checked ? "76, 175, 80" : "255, 202, 40";
+            for (let i = 0; i < dataArray.length; i++) {
+                let h = dataArray[i] * 2.5;
+                ctx.fillStyle = `rgba(${color}, ${dataArray[i]/255})`;
+                ctx.fillRect(i * barWidth, canvas.height - h, barWidth - 4, h);
+            }
+        }
 
         function draw() {
             animationId = requestAnimationFrame(draw);
